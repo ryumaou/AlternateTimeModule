@@ -1,0 +1,5 @@
+services:
+  alt_time.twig.extension:
+    class: Drupal\alt_time\Twig\AltTimeExtension
+    tags:
+      - { name: twig.extension }

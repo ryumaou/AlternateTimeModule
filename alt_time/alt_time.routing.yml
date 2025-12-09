@@ -1,0 +1,15 @@
+alt_time.convert:
+  path: '/alt-time'
+  defaults:
+    _form: '\Drupal\alt_time\Form\AltTimeConvertForm'
+    _title: 'Alternate time converter'
+  requirements:
+    _permission: 'access content'
+
+alt_time.settings:
+  path: '/admin/config/system/alt-time'
+  defaults:
+    _form: '\Drupal\alt_time\Form\AltTimeSettingsForm'
+    _title: 'Alternate time systems settings'
+  requirements:
+    _permission: 'administer site configuration'

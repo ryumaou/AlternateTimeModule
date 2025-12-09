@@ -1,0 +1,12 @@
+alt_time.settings:
+  type: config_object
+  label: 'Alternate time systems settings'
+  mapping:
+    default_standard:
+      type: string
+      label: 'Default time standard'
+      description: 'Default time standard to use when none is explicitly specified (tc, stardate, imperial, ordinal, dale).'
+    year_offset:
+      type: integer
+      label: 'Year offset'
+      description: 'Number of years to offset all alternate time calculations (positive for future, negative for past).'

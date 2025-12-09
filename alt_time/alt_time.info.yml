@@ -1,0 +1,7 @@
+name: 'Alternate time systems'
+type: module
+description: 'Provides alternate time/date systems (TC, Stardate, Imperial, Ordinal, Dale Reckoning) with site-wide year offset.'
+core_version_requirement: '^10 || ^11'
+package: 'Custom'
+dependencies:
+  - drupal:system

@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * @file
+ * Hooks and bootstrap for the Alternate time systems module.
+ *
+ * We explicitly include TCDate.php so that its namespaced functions
+ * (tcdate(), calculateStardate(), applyYearOffset(), etc.) are available.
+ */
+
+require_once __DIR__ . '/src/TCDate.php';
