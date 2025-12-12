@@ -129,13 +129,14 @@ class AltTimeConvertForm extends FormBase {
         $results .= '<p><strong>Ordinal date:</strong> ' . $ordinal . '</p>';
       }
       else {
-        // Dale Reckoning.
-        $dr = calculateDaleReckoning($dt);
+  // Set TRUE for extra debug; set back to FALSE once happy.
+  $dr = calculateDaleReckoning($dt, TRUE);
 
-        $results  = '<h2>Dale Reckoning (Forgotten Realms)</h2>';
-        $results .= '<p><strong>Gregorian date (after offset):</strong> ' . $dt->format(DateTime::ATOM) . '</p>';
-        $results .= '<p><strong>Dale Reckoning:</strong> ' . $dr . '</p>';
-      }
+  $results  = '<h2>Dale Reckoning (Forgotten Realms)</h2>';
+  $results .= '<p><strong>Gregorian date (after offset):</strong> ' . $dt->format(DateTime::ATOM) . '</p>';
+  $results .= '<p><strong>Dale Reckoning:</strong> ' . $dr . '</p>';
+}
+
     }
     catch (\Throwable $e) {
       $results  = '<h2>Error converting date</h2>';
