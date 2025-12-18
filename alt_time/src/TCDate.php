@@ -406,18 +406,11 @@ function calculateOrdinalDate(DateTime $date): string {
 
 
 /**
- * Forgotten Realms nth-day helper: 1 -> 1st, etc.
- */
-
-/**
- * Simple ordinal helper like your original nthday().
- *
- * Example: 1 -> 1st, 2 -> 2nd, 3 -> 3rd, 4 -> 4th, ...
+ * Ordinal helper: 1 -> 1st, 2 -> 2nd, 3 -> 3rd, etc.
  */
 function fr_nthday(int $day, int $small = 1): string {
   $suffix = 'th';
 
-  // 11, 12, 13 are special cases
   if ($day % 100 < 11 || $day % 100 > 13) {
     switch ($day % 10) {
       case 1:
@@ -432,12 +425,11 @@ function fr_nthday(int $day, int $small = 1): string {
     }
   }
 
-  // $small is ignored here, but kept for compatibility with your original signature.
   return $day . $suffix;
 }
 
 /**
- * Original Forgotten Realms Dale Reckoning conversion, very close to your frdates().
+ * Forgotten Realms Dale Reckoning conversion (close to original frdates()).
  *
  * @param int $day
  * @param int $month
@@ -448,220 +440,195 @@ function fr_nthday(int $day, int $small = 1): string {
  */
 function frdates(int $day, int $month, int $year): string {
   $ts       = mktime(0, 0, 0, $month, $day, $year);
-  $leapyear = (int) date('L', $ts);
+  $is_leap  = (int) date('L', $ts);
   $FRYear   = (int) date('Y', $ts) - 524;
-  $doy      = (int) date('z', $ts) + 1;
+  $doy      = (int) date('z', $ts) + 1; // 1–365 / 366
 
-  $Fmonth = 'Error';
-  $Fday   = 0;
+  $Fmonth   = 'Error';
+  $Fday     = 0;
+  $isHoliday = false;
 
-  // -------- LEAP YEAR BRANCH --------
-  if ($leapyear == 1) {
-    switch (TRUE) {
-      case ($doy > 0 && $doy < 31):
-        $Fmonth = "Hammer";
-        $Fday   = $doy;
-        break;
-
-      case 31:
-        $Fmonth = "Midwinter";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 31 && $doy < 62):
-        $Fmonth = "Alturiak";
-        $Fday   = $doy - 31;
-        break;
-
-      case ($doy > 61 && $doy < 92):
-        $Fmonth = "Ches";
-        $Fday   = $doy - 61;
-        break;
-
-      case ($doy > 91 && $doy < 122):
-        $Fmonth = "Tarkash";
-        $Fday   = $doy - 91;
-        break;
-
-      case 122:
-        $Fmonth = "Greengrass";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 122 && $doy < 153):
-        $Fmonth = "Mirtul";
-        $Fday   = $doy - 122;
-        break;
-
-      case ($doy > 152 && $doy < 183):
-        $Fmonth = "Kythorn";
-        $Fday   = $doy - 152;
-        break;
-
-      case ($doy > 182 && $doy < 213):
-        $Fmonth = "Flamerule";
-        $Fday   = $doy - 182;
-        break;
-
-      case 213:
-        $Fmonth = "Midsummer";
-        $Fday   = 0;
-        break;
-
-      case 214:
-        $Fmonth = "Shieldmeet";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 214 && $doy < 245):
-        $Fmonth = "Elesias";
-        $Fday   = $doy - 214;
-        break;
-
-      case ($doy > 244 && $doy < 275):
-        $Fmonth = "Eleint";
-        $Fday   = $doy - 244;
-        break;
-
-      case 275:
-        $Fmonth = "Harvesttide";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 275 && $doy < 306):
-        $Fmonth = "Marpenoth";
-        $Fday   = $doy - 275;
-        break;
-
-      case ($doy > 305 && $doy < 335):
-        $Fmonth = "Uktar";
-        $Fday   = $doy - 305;
-        break;
-
-      case 335:
-        $Fmonth = "The Feast of the Moon";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 335 && $doy < 367):
-        $Fmonth = "Nightal";
-        $Fday   = $doy - 336;
-        break;
-
-      default:
-        $Fmonth = "Error";
-        $Fday   = 0;
-        break;
+  if ($is_leap === 1) {
+    // ---------- LEAP YEAR ----------
+    if ($doy >= 1 && $doy <= 30) {
+      $Fmonth = 'Hammer';
+      $Fday   = $doy;
+    }
+    elseif ($doy === 31) {
+      $Fmonth   = 'Midwinter';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 32 && $doy <= 61) {
+      $Fmonth = 'Alturiak';
+      $Fday   = $doy - 31;
+    }
+    elseif ($doy >= 62 && $doy <= 91) {
+      $Fmonth = 'Ches';
+      $Fday   = $doy - 61;
+    }
+    elseif ($doy >= 92 && $doy <= 121) {
+      $Fmonth = 'Tarkash';
+      $Fday   = $doy - 91;
+    }
+    elseif ($doy === 122) {
+      $Fmonth   = 'Greengrass';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 123 && $doy <= 152) {
+      $Fmonth = 'Mirtul';
+      $Fday   = $doy - 122;
+    }
+    elseif ($doy >= 153 && $doy <= 182) {
+      $Fmonth = 'Kythorn';
+      $Fday   = $doy - 152;
+    }
+    elseif ($doy >= 183 && $doy <= 212) {
+      $Fmonth = 'Flamerule';
+      $Fday   = $doy - 182;
+    }
+    elseif ($doy === 213) {
+      $Fmonth   = 'Midsummer';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy === 214) {
+      $Fmonth   = 'Shieldmeet';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 215 && $doy <= 244) {
+      $Fmonth = 'Elesias';
+      $Fday   = $doy - 214;
+    }
+    elseif ($doy >= 245 && $doy <= 274) {
+      $Fmonth = 'Eleint';
+      $Fday   = $doy - 244;
+    }
+    elseif ($doy === 275) {
+      $Fmonth   = 'Harvesttide';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 276 && $doy <= 305) {
+      $Fmonth = 'Marpenoth';
+      $Fday   = $doy - 275;
+    }
+    elseif ($doy >= 306 && $doy <= 334) {
+      $Fmonth = 'Uktar';
+      $Fday   = $doy - 305;
+    }
+    elseif ($doy === 335) {
+      $Fmonth   = 'The Feast of the Moon';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 336 && $doy <= 366) {
+      $Fmonth = 'Nightal';
+      $Fday   = $doy - 336;
+    }
+    else {
+      $Fmonth = 'Error';
+      $Fday   = 0;
     }
   }
-  // -------- NON-LEAP YEAR BRANCH --------
   else {
-    switch (TRUE) {
-      case ($doy > 0 && $doy < 31):
-        $Fmonth = "Hammer";
-        $Fday   = $doy;
-        break;
-
-      case 31:
-        $Fmonth = "Midwinter";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 31 && $doy < 62):
-        $Fmonth = "Alturiak";
-        $Fday   = $doy - 31;
-        break;
-
-      case ($doy > 61 && $doy < 92):
-        $Fmonth = "Ches";
-        $Fday   = $doy - 61;
-        break;
-
-      case ($doy > 91 && $doy < 122):
-        $Fmonth = "Tarkash";
-        $Fday   = $doy - 91;
-        break;
-
-      case 122:
-        $Fmonth = "Greengrass";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 122 && $doy < 153):
-        $Fmonth = "Mirtul";
-        $Fday   = $doy - 122;
-        break;
-
-      case ($doy > 152 && $doy < 183):
-        $Fmonth = "Kythorn";
-        $Fday   = $doy - 152;
-        break;
-
-      case ($doy > 182 && $doy < 213):
-        $Fmonth = "Flamerule";
-        $Fday   = $doy - 182;
-        break;
-
-      case 213:
-        $Fmonth = "Midsummer";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 213 && $doy < 244):
-        $Fmonth = "Elesias";
-        $Fday   = $doy - 213;
-        break;
-
-      case ($doy > 243 && $doy < 274):
-        $Fmonth = "Eleint";
-        $Fday   = $doy - 243;
-        break;
-
-      case 274:
-        $Fmonth = "Harvesttide";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 274 && $doy < 305):
-        $Fmonth = "Marpenoth";
-        $Fday   = $doy - 274;
-        break;
-
-      case ($doy > 304 && $doy < 334):
-        $Fmonth = "Uktar";
-        $Fday   = $doy - 304;
-        break;
-
-      case 334:
-        $Fmonth = "The Feast of the Moon";
-        $Fday   = 0;
-        break;
-
-      case ($doy > 334 && $doy < 366):
-        $Fmonth = "Nightal";
-        $Fday   = $doy - 335;
-        break;
-
-      default:
-        $Fmonth = "Error";
-        $Fday   = 0;
-        break;
+    // ---------- NON-LEAP YEAR ----------
+    if ($doy >= 1 && $doy <= 30) {
+      $Fmonth = 'Hammer';
+      $Fday   = $doy;
+    }
+    elseif ($doy === 31) {
+      $Fmonth   = 'Midwinter';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 32 && $doy <= 61) {
+      $Fmonth = 'Alturiak';
+      $Fday   = $doy - 31;
+    }
+    elseif ($doy >= 62 && $doy <= 91) {
+      $Fmonth = 'Ches';
+      $Fday   = $doy - 61;
+    }
+    elseif ($doy >= 92 && $doy <= 121) {
+      $Fmonth = 'Tarkash';
+      $Fday   = $doy - 91;
+    }
+    elseif ($doy === 122) {
+      $Fmonth   = 'Greengrass';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 123 && $doy <= 152) {
+      $Fmonth = 'Mirtul';
+      $Fday   = $doy - 122;
+    }
+    elseif ($doy >= 153 && $doy <= 182) {
+      $Fmonth = 'Kythorn';
+      $Fday   = $doy - 152;
+    }
+    elseif ($doy >= 183 && $doy <= 212) {
+      $Fmonth = 'Flamerule';
+      $Fday   = $doy - 182;
+    }
+    elseif ($doy === 213) {
+      $Fmonth   = 'Midsummer';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 214 && $doy <= 243) {
+      $Fmonth = 'Elesias';
+      $Fday   = $doy - 213;
+    }
+    elseif ($doy >= 244 && $doy <= 273) {
+      $Fmonth = 'Eleint';
+      $Fday   = $doy - 243;
+    }
+    elseif ($doy === 274) {
+      $Fmonth   = 'Harvesttide';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 275 && $doy <= 304) {
+      $Fmonth = 'Marpenoth';
+      $Fday   = $doy - 274;
+    }
+    elseif ($doy >= 305 && $doy <= 333) {
+      $Fmonth = 'Uktar';
+      $Fday   = $doy - 304;
+    }
+    elseif ($doy === 334) {
+      $Fmonth   = 'The Feast of the Moon';
+      $Fday     = 0;
+      $isHoliday = true;
+    }
+    elseif ($doy >= 335 && $doy <= 365) {
+      $Fmonth = 'Nightal';
+      $Fday   = $doy - 335;
+    }
+    else {
+      $Fmonth = 'Error';
+      $Fday   = 0;
     }
   }
 
   // --- Final formatting ---
-  if ($Fday > 0) {
-    // Normal day with ordinal.
-    return $Fmonth . ' ' . fr_nthday($Fday, 1) . ', ' . $FRYear . ' DR';
-  }
-  else {
-    // Holiday / festival days.
+  if ($isHoliday) {
     return $Fmonth . ' ' . $FRYear . ' DR — Happy holiday feast!';
   }
+
+  if ($Fday > 0) {
+    return $Fmonth . ' ' . fr_nthday($Fday, 1) . ', ' . $FRYear . ' DR';
+  }
+
+  return 'Error: could not map date to Dale Reckoning.';
 }
 
+
 /**
- * Wrapper used by the rest of the module: adapt DateTime → frdates().
+ * Wrapper used by the module: DateTime → Dale Reckoning string.
  */
 function calculateDaleReckoning(DateTime $date): string {
   $day   = (int) $date->format('d');
