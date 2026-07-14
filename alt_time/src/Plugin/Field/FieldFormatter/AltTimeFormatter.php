@@ -32,7 +32,8 @@ class AltTimeFormatter extends FormatterBase {
   public static function defaultSettings() {
     return [
       'standard' => 'tc',
-      'show_label' => TRUE,
+      'label_prefix' => '',
+      'label_suffix' => '',
       'as_html' => TRUE,
     ] + parent::defaultSettings();
   }
@@ -51,10 +52,18 @@ class AltTimeFormatter extends FormatterBase {
       '#default_value' => $this->getSetting('standard'),
     ];
 
-    $elements['show_label'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show label'),
-      '#default_value' => $this->getSetting('show_label'),
+    $elements['label_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Prefix'),
+      '#default_value' => $this->getSetting('label_prefix'),
+      '#description' => $this->t('Optional text to prepend to the rendered value. Leave blank for none.'),
+    ];
+
+    $elements['label_suffix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Suffix'),
+      '#default_value' => $this->getSetting('label_suffix'),
+      '#description' => $this->t('Optional text to append to the rendered value. Leave blank for none.'),
     ];
 
     $elements['as_html'] = [
@@ -87,12 +96,10 @@ class AltTimeFormatter extends FormatterBase {
       $summary[] = $this->t('Rendered as Dale Reckoning (Forgotten Realms).');
     }
 
-    if ($this->getSetting('show_label')) {
-      $summary[] = $this->t('Label is displayed.');
-    }
-    else {
-      $summary[] = $this->t('Label is hidden.');
-    }
+    $prefix = (string) $this->getSetting('label_prefix');
+    $suffix = (string) $this->getSetting('label_suffix');
+    $summary[] = $this->t('Prefix: %prefix', ['%prefix' => $prefix === '' ? '[blank]' : $prefix]);
+    $summary[] = $this->t('Suffix: %suffix', ['%suffix' => $suffix === '' ? '[blank]' : $suffix]);
 
     return $summary;
   }
@@ -100,7 +107,8 @@ class AltTimeFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = [];
     $standard = $this->getSetting('standard');
-    $show_label = (bool) $this->getSetting('show_label');
+    $label_prefix = (string) $this->getSetting('label_prefix');
+    $label_suffix = (string) $this->getSetting('label_suffix');
     $as_html = (bool) $this->getSetting('as_html');
 
     foreach ($items as $delta => $item) {
@@ -109,25 +117,22 @@ class AltTimeFormatter extends FormatterBase {
         continue;
       }
 
-      // Normalize to DateTime for non-TC branches; TC will do its own.
+      if (preg_match('/^[\-]?\d+$/', (string) $value)) {
+        $dt = new DateTime();
+        $dt->setTimestamp((int) $value);
+      }
+      else {
+        $dt = new DateTime($value);
+      }
+
+      $dt = applyYearOffset($dt);
+
       if ($standard === 'tc') {
-        // Interpret as timestamp or date string.
-        if (preg_match('/^[\-]?\d+$/', (string) $value)) {
-          $dt = new DateTime();
-          $dt->setTimestamp((int) $value);
-        }
-        else {
-          $dt = new DateTime($value);
-        }
-
-        $dt = applyYearOffset($dt);
-
         $tc_array = tcdate($dt->format(DateTime::ATOM));
-        $label_html = $show_label ? '<span class="tc-label">TC:</span> ' : '';
 
         if ($as_html) {
           $tc_html = tcdateToHTML($tc_array);
-          $output = $label_html . $tc_html;
+          $output = $label_prefix . $tc_html . $label_suffix;
 
           $elements[$delta] = [
             '#type' => 'inline_template',
@@ -136,79 +141,30 @@ class AltTimeFormatter extends FormatterBase {
           ];
         }
         else {
-          $text = ($show_label ? 'TC: ' : '') . ($tc_array['padded_date'] ?? $tc_array['date']);
+          $text = $label_prefix . ($tc_array['padded_date'] ?? $tc_array['date']) . $label_suffix;
           $elements[$delta] = [
             '#plain_text' => $text,
           ];
         }
       }
       elseif ($standard === 'stardate') {
-        if (preg_match('/^[\-]?\d+$/', (string) $value)) {
-          $dt = new DateTime();
-          $dt->setTimestamp((int) $value);
-        }
-        else {
-          $dt = new DateTime($value);
-        }
-
-        $dt = applyYearOffset($dt);
-        $stardate = calculateStardate($dt);
-        $label_text = $show_label ? 'Stardate ' : '';
-
         $elements[$delta] = [
-          '#plain_text' => $label_text . $stardate,
+          '#plain_text' => $label_prefix . calculateStardate($dt) . $label_suffix,
         ];
       }
       elseif ($standard === 'imperial') {
-        if (preg_match('/^[\-]?\d+$/', (string) $value)) {
-          $dt = new DateTime();
-          $dt->setTimestamp((int) $value);
-        }
-        else {
-          $dt = new DateTime($value);
-        }
-
-        $dt = applyYearOffset($dt);
-        $imperial = calculateImperialDate($dt);
-        $label_text = $show_label ? 'Imperial date ' : '';
-
         $elements[$delta] = [
-          '#plain_text' => $label_text . $imperial,
+          '#plain_text' => $label_prefix . calculateImperialDate($dt) . $label_suffix,
         ];
       }
       elseif ($standard === 'ordinal') {
-        if (preg_match('/^[\-]?\d+$/', (string) $value)) {
-          $dt = new DateTime();
-          $dt->setTimestamp((int) $value);
-        }
-        else {
-          $dt = new DateTime($value);
-        }
-
-        $dt = applyYearOffset($dt);
-        $ordinal = calculateOrdinalDate($dt);
-        $label_text = $show_label ? 'Ordinal date ' : '';
-
         $elements[$delta] = [
-          '#plain_text' => $label_text . $ordinal,
+          '#plain_text' => $label_prefix . calculateOrdinalDate($dt) . $label_suffix,
         ];
       }
       else {
-        // Dale Reckoning.
-        if (preg_match('/^[\-]?\d+$/', (string) $value)) {
-          $dt = new DateTime();
-          $dt->setTimestamp((int) $value);
-        }
-        else {
-          $dt = new DateTime($value);
-        }
-
-        $dt = applyYearOffset($dt);
-        $dr = calculateDaleReckoning($dt);
-        $label_text = $show_label ? 'Dale Reckoning ' : '';
-
         $elements[$delta] = [
-          '#plain_text' => $label_text . $dr,
+          '#plain_text' => $label_prefix . calculateDaleReckoning($dt) . $label_suffix,
         ];
       }
     }

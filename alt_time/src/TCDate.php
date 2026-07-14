@@ -616,11 +616,11 @@ function frdates(int $day, int $month, int $year): string {
 
   // --- Final formatting ---
   if ($isHoliday) {
-    return $Fmonth . ' ' . $FRYear . ' DR — Happy holiday feast!';
+    return $Fmonth . ' ' . $FRYear . ' — Happy holiday feast!';
   }
 
   if ($Fday > 0) {
-    return $Fmonth . ' ' . fr_nthday($Fday, 1) . ', ' . $FRYear . ' DR';
+    return $Fmonth . ' ' . fr_nthday($Fday, 1) . ', ' . $FRYear;
   }
 
   return 'Error: could not map date to Dale Reckoning.';

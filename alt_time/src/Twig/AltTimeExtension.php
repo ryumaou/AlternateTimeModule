@@ -33,20 +33,27 @@ class AltTimeExtension extends AbstractExtension {
    *   'tc', 'stardate', 'imperial', 'ordinal', 'dale' or NULL for default.
    * @param array $options
    *   - as_html: For TC, render as spans (TRUE) or plain text (FALSE).
-   *   - show_label: Whether to include a label prefix.
+   *   - label_prefix: Optional explicit prefix override.
+   *   - label_suffix: Optional explicit suffix override.
    *
    * @return string
    *   Rendered alternate time.
    */
   public function altTimeFilter($value, ?string $standard = NULL, array $options = []): string {
+    $config = \Drupal::config('alt_time.settings');
+
     if ($standard === NULL || $standard === '') {
-      $config = \Drupal::config('alt_time.settings');
       $standard = $config->get('default_standard') ?? 'tc';
     }
 
     $standard = strtolower($standard);
     $as_html = $options['as_html'] ?? TRUE;
-    $show_label = $options['show_label'] ?? TRUE;
+    $label_prefix = array_key_exists('label_prefix', $options)
+      ? (string) $options['label_prefix']
+      : (string) ($config->get('label_prefix') ?? '');
+    $label_suffix = array_key_exists('label_suffix', $options)
+      ? (string) $options['label_suffix']
+      : (string) ($config->get('label_suffix') ?? '');
 
     $dt = $this->normalizeToDateTime($value);
     if (!$dt) {
@@ -56,36 +63,27 @@ class AltTimeExtension extends AbstractExtension {
     $dt = applyYearOffset($dt);
 
     if ($standard === 'stardate') {
-      $stardate = calculateStardate($dt);
-      $label = $show_label ? 'Stardate ' : '';
-      return $label . $stardate;
+      return $label_prefix . calculateStardate($dt) . $label_suffix;
     }
     elseif ($standard === 'imperial') {
-      $imperial = calculateImperialDate($dt);
-      $label = $show_label ? 'Imperial date ' : '';
-      return $label . $imperial;
+      return $label_prefix . calculateImperialDate($dt) . $label_suffix;
     }
     elseif ($standard === 'ordinal') {
-      $ordinal = calculateOrdinalDate($dt);
-      $label = $show_label ? 'Ordinal date ' : '';
-      return $label . $ordinal;
+      return $label_prefix . calculateOrdinalDate($dt) . $label_suffix;
     }
     elseif ($standard === 'dale') {
-      $dr = calculateDaleReckoning($dt);
-      $label = $show_label ? 'Dale Reckoning ' : '';
-      return $label . $dr;
+      return $label_prefix . calculateDaleReckoning($dt) . $label_suffix;
     }
 
     // Default: TC.
     $tc_array = tcdate($dt->format(DateTime::ATOM));
-    $label_prefix = $show_label ? 'TC: ' : '';
 
     if ($as_html) {
       $tc_html = tcdateToHTML($tc_array);
-      return $label_prefix . $tc_html;
+      return $label_prefix . $tc_html . $label_suffix;
     }
     else {
-      return $label_prefix . ($tc_array['padded_date'] ?? $tc_array['date']);
+      return $label_prefix . ($tc_array['padded_date'] ?? $tc_array['date']) . $label_suffix;
     }
   }
 

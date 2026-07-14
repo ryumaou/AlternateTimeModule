@@ -26,7 +26,8 @@ class AltTimeBlock extends BlockBase {
   public function defaultConfiguration() {
     return [
       'standard' => 'tc',
-      'show_label' => TRUE,
+      'label_prefix' => '',
+      'label_suffix' => '',
     ] + parent::defaultConfiguration();
   }
 
@@ -48,10 +49,18 @@ class AltTimeBlock extends BlockBase {
       '#default_value' => $config['standard'] ?? $default_standard,
     ];
 
-    $form['show_label'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show label'),
-      '#default_value' => $config['show_label'] ?? TRUE,
+    $form['label_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Prefix'),
+      '#default_value' => $config['label_prefix'] ?? '',
+      '#description' => $this->t('Optional text to prepend to the rendered value. Leave blank for none.'),
+    ];
+
+    $form['label_suffix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Suffix'),
+      '#default_value' => $config['label_suffix'] ?? '',
+      '#description' => $this->t('Optional text to append to the rendered value. Leave blank for none.'),
     ];
 
     return $form;
@@ -59,51 +68,45 @@ class AltTimeBlock extends BlockBase {
 
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['standard'] = $form_state->getValue('standard');
-    $this->configuration['show_label'] = (bool) $form_state->getValue('show_label');
+    $this->configuration['label_prefix'] = (string) $form_state->getValue('label_prefix');
+    $this->configuration['label_suffix'] = (string) $form_state->getValue('label_suffix');
   }
 
   public function build() {
     $config = \Drupal::config('alt_time.settings');
     $config_default = $config->get('default_standard') ?? 'tc';
+    $config_label_prefix = (string) ($config->get('label_prefix') ?? '');
+    $config_label_suffix = (string) ($config->get('label_suffix') ?? '');
 
     $standard = $this->configuration['standard'] ?? $config_default;
-    $show_label = $this->configuration['show_label'] ?? TRUE;
+    $label_prefix = array_key_exists('label_prefix', $this->configuration)
+      ? (string) $this->configuration['label_prefix']
+      : $config_label_prefix;
+    $label_suffix = array_key_exists('label_suffix', $this->configuration)
+      ? (string) $this->configuration['label_suffix']
+      : $config_label_suffix;
 
     if ($standard === 'tc') {
       $dt = applyYearOffset(new DateTime('now'));
       $tc_array = tcdate($dt->format(DateTime::ATOM));
-      $tc_html = tcdateToHTML($tc_array);
-      $label = $show_label ? '<strong>Current TC:</strong> ' : '';
-
-      $markup = '<div class="alt-time-current">' . $label . $tc_html . '</div>';
+      $value = tcdateToHTML($tc_array);
+      $markup = '<div class="alt-time-current">' . $label_prefix . $value . $label_suffix . '</div>';
     }
     elseif ($standard === 'stardate') {
       $dt = applyYearOffset(new DateTime('now'));
-      $stardate = calculateStardate($dt);
-      $label = $show_label ? '<strong>Current Stardate:</strong> ' : '';
-
-      $markup = '<div class="alt-time-current">' . $label . $stardate . '</div>';
+      $markup = '<div class="alt-time-current">' . $label_prefix . calculateStardate($dt) . $label_suffix . '</div>';
     }
     elseif ($standard === 'imperial') {
       $dt = applyYearOffset(new DateTime('now'));
-      $imperial = calculateImperialDate($dt);
-      $label = $show_label ? '<strong>Current Imperial date:</strong> ' : '';
-
-      $markup = '<div class="alt-time-current">' . $label . $imperial . '</div>';
+      $markup = '<div class="alt-time-current">' . $label_prefix . calculateImperialDate($dt) . $label_suffix . '</div>';
     }
     elseif ($standard === 'ordinal') {
       $dt = applyYearOffset(new DateTime('now'));
-      $ordinal = calculateOrdinalDate($dt);
-      $label = $show_label ? '<strong>Current ordinal date:</strong> ' : '';
-
-      $markup = '<div class="alt-time-current">' . $label . $ordinal . '</div>';
+      $markup = '<div class="alt-time-current">' . $label_prefix . calculateOrdinalDate($dt) . $label_suffix . '</div>';
     }
     else {
       $dt = applyYearOffset(new DateTime('now'));
-      $dr = calculateDaleReckoning($dt);
-      $label = $show_label ? '<strong>Current Dale Reckoning:</strong> ' : '';
-
-      $markup = '<div class="alt-time-current">' . $label . $dr . '</div>';
+      $markup = '<div class="alt-time-current">' . $label_prefix . calculateDaleReckoning($dt) . $label_suffix . '</div>';
     }
 
     return [

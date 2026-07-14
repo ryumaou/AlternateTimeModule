@@ -19,6 +19,8 @@ class AltTimeSettingsForm extends ConfigFormBase {
     $config = $this->config('alt_time.settings');
     $default_standard = $config->get('default_standard') ?? 'tc';
     $year_offset = (int) ($config->get('year_offset') ?? 0);
+    $label_prefix = (string) ($config->get('label_prefix') ?? '');
+    $label_suffix = (string) ($config->get('label_suffix') ?? '');
 
     $form['default_standard'] = [
       '#type' => 'radios',
@@ -43,6 +45,20 @@ class AltTimeSettingsForm extends ConfigFormBase {
       '#step' => 1,
     ];
 
+    $form['label_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Default prefix'),
+      '#default_value' => $label_prefix,
+      '#description' => $this->t('Text to prepend to alternate time values by default. Leave blank for no prefix.'),
+    ];
+
+    $form['label_suffix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Default suffix'),
+      '#default_value' => $label_suffix,
+      '#description' => $this->t('Text to append to alternate time values by default. Leave blank for no suffix.'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -50,6 +66,9 @@ class AltTimeSettingsForm extends ConfigFormBase {
     $this->configFactory->getEditable('alt_time.settings')
       ->set('default_standard', $form_state->getValue('default_standard'))
       ->set('year_offset', (int) $form_state->getValue('year_offset'))
+      ->set('label_prefix', (string) $form_state->getValue('label_prefix'))
+      ->set('label_suffix', (string) $form_state->getValue('label_suffix'))
+      ->clear('show_label')
       ->save();
 
     parent::submitForm($form, $form_state);

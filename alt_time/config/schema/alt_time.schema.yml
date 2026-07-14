@@ -10,3 +10,11 @@ alt_time.settings:
       type: integer
       label: 'Year offset'
       description: 'Number of years to offset all alternate time calculations (positive for future, negative for past).'
+    label_prefix:
+      type: string
+      label: 'Label prefix'
+      description: 'Text to prepend to rendered alternate time values by default. Can be left blank.'
+    label_suffix:
+      type: string
+      label: 'Label suffix'
+      description: 'Text to append to rendered alternate time values by default. Can be left blank.'
