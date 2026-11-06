@@ -53,6 +53,20 @@ It includes:
 
 ## Configuration
 
+### Automatic Article dates
+
+While the module is enabled, Article nodes (content type machine name `article`)
+automatically apply the `alt_time` Twig filter to their created timestamp. This
+updates the date in the theme's submitted information and the created field when
+it is displayed as node content. It uses the default time standard, year offset,
+prefix, and suffix from the module settings. Stored timestamps are unchanged.
+
+No theme edit or display configuration change is required. The theme must display
+the standard node `date` variable or created field; custom templates that format
+`node.created.value` directly should use `{{ node.created.value|alt_time }}`.
+The content type's setting for showing author and date information still applies.
+After updating an already enabled installation, run `drush cr`.
+
 Configuration path:
 
 > **Configuration → System → Alternate time**  

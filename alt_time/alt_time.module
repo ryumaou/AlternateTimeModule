@@ -9,3 +9,33 @@
  */
 
 require_once __DIR__ . '/src/TCDate.php';
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function alt_time_preprocess_node(array &$variables): void {
+  $node = $variables['node'];
+  if ($node->bundle() !== 'article') {
+    return;
+  }
+
+  // Use the actual timestamp, not the already formatted core date string.
+  // An inline template invokes the same filter available to theme templates.
+  $date = [
+    '#type' => 'inline_template',
+    '#template' => '{{ created|alt_time }}',
+    '#context' => ['created' => $node->getCreatedTime()],
+  ];
+  \Drupal\Core\Cache\CacheableMetadata::createFromObject(\Drupal::config('alt_time.settings'))
+    ->addCacheContexts(['timezone'])
+    ->applyTo($date);
+
+  // Render here so the value also works inside a theme's translated submitted
+  // text. The renderer bubbles the settings dependency into the node cache.
+  $variables['date'] = \Drupal::service('renderer')->render($date);
+
+  // Also support displays that expose the created base field as content.
+  if (isset($variables['content']['created'])) {
+    $variables['content']['created'] = $date;
+  }
+}
