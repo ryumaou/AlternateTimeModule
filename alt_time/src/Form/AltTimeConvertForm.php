@@ -2,6 +2,7 @@
 
 namespace Drupal\alt_time\Form;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use DateTime;
@@ -16,6 +17,8 @@ use function Drupal\alt_time\applyYearOffset;
 
 class AltTimeConvertForm extends FormBase {
 
+  protected const COMPACT = FALSE;
+
   public function getFormId() {
     return 'alt_time_convert_form';
   }
@@ -23,6 +26,7 @@ class AltTimeConvertForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = \Drupal::config('alt_time.settings');
     $default_standard = $config->get('default_standard') ?? 'tc';
+    CacheableMetadata::createFromObject($config)->applyTo($form);
 
     $form['input'] = [
       '#type' => 'textfield',
@@ -38,7 +42,7 @@ class AltTimeConvertForm extends FormBase {
     ];
 
     $form['standard'] = [
-      '#type' => 'radios',
+      '#type' => static::COMPACT ? 'select' : 'radios',
       '#title' => $this->t('Time standard'),
       '#options' => [
         'tc' => $this->t('Terran Computational Time (TC)'),
@@ -104,8 +108,10 @@ class AltTimeConvertForm extends FormBase {
         $results  = '<h2>Terran Computational Time</h2>';
         $results .= '<p><strong>Source date (after offset):</strong> ' . $dt->format(DateTime::ATOM) . '</p>';
         $results .= '<p><strong>Formatted:</strong> ' . $tc_html . '</p>';
-        $results .= '<p><strong>Raw TC date array:</strong></p>';
-        $results .= '<pre>' . print_r($tc_array, TRUE) . '</pre>';
+        if (!static::COMPACT) {
+          $results .= '<p><strong>Raw TC date array:</strong></p>';
+          $results .= '<pre>' . print_r($tc_array, TRUE) . '</pre>';
+        }
       }
       elseif ($standard === 'stardate') {
         $stardate = calculateStardate($dt);

@@ -19,6 +19,7 @@ It includes:
 - A **configuration page** for global settings  
 - A **block** that shows the current time in your chosen standard  
 - A **converter page** where users can enter any date and see alternate forms  
+- A **converter block** that visitors can use directly on any page
 - **PHP helper functions** and a **Twig filter** for templates and custom code  
 
 ---
@@ -152,7 +153,16 @@ Sample outputs (depending on chosen standard and config):
 
 ---
 
-### 2. Converter / tools page
+### 2. Converter block
+
+After rebuilding Drupal's caches, go to **Structure → Block layout**, choose a
+region, and place **Alternate time converter**. Visitors can enter a date and
+time such as `2026-01-31T14:52:12-06:00`, choose a time standard, and click
+**Convert** to see the result in the block. The dropdown starts with the site's
+default standard, and conversions use the site's year offset. Leaving the
+input blank converts the current time.
+
+### 3. Converter / tools page
 
 The module exposes a conversion form at a route like:
 
